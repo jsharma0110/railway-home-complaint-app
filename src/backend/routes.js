@@ -48,4 +48,21 @@ router.delete('/complaints/:id', async (req, res) => {
     }
 });
 
+// Get Worker Details
+router.get('/workers/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        const worker = await db.find({
+            selector: { username }
+        });
+        if (worker.docs.length > 0) {
+            res.json(worker.docs[0]);
+        } else {
+            res.status(404).json({ error: 'Worker not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 export default router;
