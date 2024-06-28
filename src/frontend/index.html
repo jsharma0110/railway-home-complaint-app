@@ -7,24 +7,69 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header>
-        <h1>Railway Complaint System</h1>
-        <nav>
-            <a href="#" onclick="showPage('home')">Home</a>
-            <a href="#" onclick="showPage('submitComplaint')">Submit Complaint</a>
-            <a href="#" onclick="showPage('viewComplaints')">View Complaints</a>
-            <a href="#" onclick="showPage('adminLogin')">Admin Login</a>
-            <a href="#" onclick="showPage('workerLogin')">Worker Login</a>
-        </nav>
-    </header>
+    <h1>Railway Complaint System</h1>
 
-    <main id="main-content">
-        <!-- Pages will be injected here -->
-    </main>
+    <nav>
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+    </nav>
 
-    <footer>
-        <p>&copy; 2024 Railway Complaint System</p>
-    </footer>
+    <section id="submitComplaintSection" style="display: none;">
+        <h2>Submit Your Complaint</h2>
+        <form id="complaintForm">
+            <label for="quarterNumber">Quarter Number:</label>
+            <input type="text" id="quarterNumber" required>
+            
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+            
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" required>
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+            
+            <label for="complaintType">Complaint Type:</label>
+            <input type="text" id="complaintType" required>
+            
+            <label for="urgency">Urgency:</label>
+            <select id="urgency" required>
+                <option value="Emergency">Emergency</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Regular">Regular</option>
+            </select>
+            
+            <label for="complaint">Complaint:</label>
+            <textarea id="complaint" required></textarea>
+            
+            <label for="date">Availability Date:</label>
+            <input type="date" id="date" required>
+            
+            <label for="timeframe">Availability Time:</label>
+            <select id="timeframe" required>
+                <option value="8 AM">8 AM</option>
+                <option value="9 AM">9 AM</option>
+                <option value="10 AM">10 AM</option>
+                <option value="11 AM">11 AM</option>
+                <option value="12 PM">12 PM</option>
+                <option value="1 PM">1 PM</option>
+                <option value="2 PM">2 PM</option>
+                <option value="3 PM">3 PM</option>
+                <option value="4 PM">4 PM</option>
+                <option value="5 PM">5 PM</option>
+                <option value="6 PM">6 PM</option>
+                <option value="7 PM">7 PM</option>
+                <option value="8 PM">8 PM</option>
+            </select>
+            
+            <button type="submit">Submit Complaint</button>
+        </form>
+    </section>
+
+    <section id="viewComplaintsSection" style="display: none;">
+        <h2>View Complaints</h2>
+        <ul id="complaint-list"></ul>
+    </section>
 
     <script src="js/main.js"></script>
 </body>
