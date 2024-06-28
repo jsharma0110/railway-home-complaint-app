@@ -1,11 +1,51 @@
 const express = require('express');
 const router = express.Router();
 const { complaintDB, workerDB, adminDB, userDB } = require('./db');
+const { hashPassword, authenticateUser, generateToken, authenticateJWT, authorizeRoles } = require('./auth');
+
+// User Registration
+router.post('/register', async (req, res) => {
+    try {
+        const { email, password, role } = req.body;
+        const hashedPassword = await hashPassword(password);
+        let db;
+        if (role === 'user') {
+            db = userDB;
+        } else if (role === 'worker') {
+            db = workerDB;
+        } else if (role === 'admin') {
+            db = adminDB;
+        } else {
+            return res.status(400).json({ error: 'Invalid role' });
+        }
+
+        const user = { email, password: hashedPassword, role };
+        const response = await db.post(user);
+        res.status(201).json(response);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// User Login
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password, role } = req.body;
+        const user = await authenticateUser(email, password, role);
+        const token = generateToken(user);
+        res.json({ token });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Protected Route Example
+router.get('/protected', authenticateJWT, authorizeRoles('admin', 'worker'), (req, res) => {
+    res.json({ message: 'This is a protected route for admins and workers' });
+});
 
 // Complaint Routes
-
-// Create Complaint
-router.post('/complaints', async (req, res) => {
+router.post('/complaints', authenticateJWT, authorizeRoles('user', 'admin'), async (req, res) => {
     try {
         const complaint = req.body;
         const response = await complaintDB.post(complaint);
@@ -15,8 +55,7 @@ router.post('/complaints', async (req, res) => {
     }
 });
 
-// Read Complaints
-router.get('/complaints', async (req, res) => {
+router.get('/complaints', authenticateJWT, authorizeRoles('admin', 'worker'), async (req, res) => {
     try {
         const complaints = await complaintDB.allDocs({ include_docs: true });
         res.json(complaints.rows.map(row => row.doc));
@@ -25,8 +64,7 @@ router.get('/complaints', async (req, res) => {
     }
 });
 
-// Update Complaint
-router.put('/complaints/:id', async (req, res) => {
+router.put('/complaints/:id', authenticateJWT, authorizeRoles('admin', 'worker'), async (req, res) => {
     try {
         const { id } = req.params;
         const updatedComplaint = req.body;
@@ -38,8 +76,7 @@ router.put('/complaints/:id', async (req, res) => {
     }
 });
 
-// Delete Complaint
-router.delete('/complaints/:id', async (req, res) => {
+router.delete('/complaints/:id', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const complaint = await complaintDB.get(id);
@@ -51,11 +88,11 @@ router.delete('/complaints/:id', async (req, res) => {
 });
 
 // Worker Routes
-
-// Create Worker
-router.post('/workers', async (req, res) => {
+router.post('/workers', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const worker = req.body;
+        const hashedPassword = await hashPassword(worker.password);
+        worker.password = hashedPassword;
         const response = await workerDB.post(worker);
         res.status(201).json(response);
     } catch (error) {
@@ -63,8 +100,7 @@ router.post('/workers', async (req, res) => {
     }
 });
 
-// Read Workers
-router.get('/workers', async (req, res) => {
+router.get('/workers', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const workers = await workerDB.allDocs({ include_docs: true });
         res.json(workers.rows.map(row => row.doc));
@@ -73,8 +109,7 @@ router.get('/workers', async (req, res) => {
     }
 });
 
-// Update Worker
-router.put('/workers/:id', async (req, res) => {
+router.put('/workers/:id', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const updatedWorker = req.body;
@@ -86,8 +121,7 @@ router.put('/workers/:id', async (req, res) => {
     }
 });
 
-// Delete Worker
-router.delete('/workers/:id', async (req, res) => {
+router.delete('/workers/:id', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const worker = await workerDB.get(id);
@@ -98,8 +132,7 @@ router.delete('/workers/:id', async (req, res) => {
     }
 });
 
-// Get Worker Details
-router.get('/workers/:username', async (req, res) => {
+router.get('/workers/:username', authenticateJWT, authorizeRoles('admin', 'worker'), async (req, res) => {
     try {
         const { username } = req.params;
         const worker = await workerDB.find({
@@ -116,11 +149,11 @@ router.get('/workers/:username', async (req, res) => {
 });
 
 // Admin Routes
-
-// Create Admin
-router.post('/admins', async (req, res) => {
+router.post('/admins', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const admin = req.body;
+        const hashedPassword = await hashPassword(admin.password);
+        admin.password = hashedPassword;
         const response = await adminDB.post(admin);
         res.status(201).json(response);
     } catch (error) {
@@ -128,8 +161,7 @@ router.post('/admins', async (req, res) => {
     }
 });
 
-// Read Admins
-router.get('/admins', async (req, res) => {
+router.get('/admins', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const admins = await adminDB.allDocs({ include_docs: true });
         res.json(admins.rows.map(row => row.doc));
@@ -138,8 +170,7 @@ router.get('/admins', async (req, res) => {
     }
 });
 
-// Update Admin
-router.put('/admins/:id', async (req, res) => {
+router.put('/admins/:id', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const updatedAdmin = req.body;
@@ -151,8 +182,7 @@ router.put('/admins/:id', async (req, res) => {
     }
 });
 
-// Delete Admin
-router.delete('/admins/:id', async (req, res) => {
+router.delete('/admins/:id', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const admin = await adminDB.get(id);
@@ -163,65 +193,16 @@ router.delete('/admins/:id', async (req, res) => {
     }
 });
 
-// User Routes
-
-// Create User
-router.post('/users', async (req, res) => {
-    try {
-        const user = req.body;
-        const response = await userDB.post(user);
-        res.status(201).json(response);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Read Users
-router.get('/users', async (req, res) => {
-    try {
-        const users = await userDB.allDocs({ include_docs: true });
-        res.json(users.rows.map(row => row.doc));
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Update User
-router.put('/users/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updatedUser = req.body;
-        const user = await userDB.get(id);
-        const response = await userDB.put({ ...user, ...updatedUser });
-        res.json(response);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Delete User
-router.delete('/users/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user = await userDB.get(id);
-        const response = await userDB.remove(user);
-        res.json(response);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get User Details
-router.get('/users/:username', async (req, res) => {
+router.get('/admins/:username', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
     try {
         const { username } = req.params;
-        const user = await userDB.find({
+        const admin = await adminDB.find({
             selector: { username }
         });
-        if (user.docs.length > 0) {
-            res.json(user.docs[0]);
+        if (admin.docs.length > 0) {
+            res.json(admin.docs[0]);
         } else {
-            res.status(404).json({ error: 'User not found' });
+            res.status(404).json({ error: 'Admin not found' });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -229,4 +210,3 @@ router.get('/users/:username', async (req, res) => {
 });
 
 module.exports = router;
-
