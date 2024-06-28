@@ -208,5 +208,8 @@ router.get('/admins/:username', authenticateJWT, authorizeRoles('admin'), async 
         res.status(500).json({ error: error.message });
     }
 });
+router.get('/check-auth', authenticateJWT, (req, res) => {
+    res.json({ authenticated: true });
+});
 
 module.exports = router;
