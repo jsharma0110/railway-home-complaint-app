@@ -1,8 +1,6 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const db = require('./db').default;
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -11,7 +9,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // API Routes
-app.use('/api', require('./routes').default);
+app.use('/api', require('./routes'));
 
 // Serve the front-end
 app.get('*', (req, res) => {
