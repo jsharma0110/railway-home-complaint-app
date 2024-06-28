@@ -26,9 +26,12 @@
     "start": "http-server src/frontend -p 3000 -c-1 -o -s"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.19.2",
+    "express-jwt": "^7.7.8",
     "http-server": "^14.1.1",
+    "jsonwebtoken": "^9.0.2",
     "pouchdb": "^9.0.0",
     "pouchdb-find": "^9.0.0"
   }
