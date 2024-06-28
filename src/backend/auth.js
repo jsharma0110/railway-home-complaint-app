@@ -1,21 +1,21 @@
-import { sign, verify } from 'jsonwebtoken';
-import { genSalt, hash as _hash, compare } from 'bcryptjs';
-import { userDB, workerDB, adminDB } from './db';
+import { userDB, workerDB, adminDB } from './db.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
-const SECRET_KEY = 'super_secret_password_lalala'; 
+const SECRET_KEY = 'your_secret_key'; 
 
 async function hashPassword(password) {
-    const salt = await genSalt(10);
-    return _hash(password, salt);
+    const salt = await bcrypt.genSalt(10);
+    return bcrypt.hash(password, salt);
 }
 
 async function comparePassword(password, hash) {
-    return compare(password, hash);
+    return bcrypt.compare(password, hash);
 }
 
 function generateToken(user) {
     const { _id, email, role } = user;
-    return sign({ _id, email, role }, SECRET_KEY, { expiresIn: '1h' });
+    return jwt.sign({ _id, email, role }, SECRET_KEY, { expiresIn: '1h' });
 }
 
 async function authenticateUser(email, password, role) {
@@ -51,7 +51,7 @@ function authenticateJWT(req, res, next) {
     }
 
     try {
-        const verified = verify(token, SECRET_KEY);
+        const verified = jwt.verify(token, SECRET_KEY);
         req.user = verified;
         next();
     } catch (error) {
@@ -68,7 +68,7 @@ function authorizeRoles(...roles) {
     };
 }
 
-export default {
+export {
     hashPassword,
     authenticateUser,
     generateToken,
