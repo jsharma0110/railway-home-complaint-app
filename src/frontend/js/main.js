@@ -1,5 +1,18 @@
-document.addEventListener('DOMContentLoaded', function() {
-    showPage('home');
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('complaintForm')) {
+        document.getElementById('complaintForm').addEventListener('submit', submitComplaint);
+        loadComplaints();
+    }
+    
+    if (document.getElementById('loginForm')) {
+        document.getElementById('loginForm').addEventListener('submit', loginUser);
+    }
+    
+    if (document.getElementById('registerForm')) {
+        document.getElementById('registerForm').addEventListener('submit', registerUser);
+    }
+    
+    checkAuth();
 });
 
 let predefinedWorkers = JSON.parse(localStorage.getItem('predefinedWorkers')) || [
@@ -224,13 +237,16 @@ function submitComplaint(event) {
 
     fetch('/api/complaints', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify(newComplaint)
     })
     .then(response => response.json())
     .then(data => {
         alert('Complaint submitted successfully!');
-        // Optionally, clear the form fields
+        // Clear the form fields
         document.getElementById('quarterNumber').value = '';
         document.getElementById('name').value = '';
         document.getElementById('phone').value = '';
@@ -241,9 +257,7 @@ function submitComplaint(event) {
         document.getElementById('date').value = '';
         document.getElementById('timeframe').value = '';
 
-        // Update the UI by showing the complaints page
-        showPage('viewComplaints');
-        // Load complaints to refresh the list
+        // Update the UI by loading the complaints
         loadComplaints();
     })
     .catch(error => {
@@ -252,57 +266,80 @@ function submitComplaint(event) {
     });
 }
 
-
 function loadComplaints() {
-    const complaints = JSON.parse(localStorage.getItem('complaints')) || [];
-    const complaintList = document.getElementById('complaint-list');
-    complaintList.innerHTML = '';
+    fetch('/api/complaints', {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    })
+        .then(response => response.json())
+        .then(complaints => {
+            const complaintList = document.getElementById('complaint-list');
+            complaintList.innerHTML = '';
 
-    complaints.forEach((complaint, index) => {
-        const listItem = document.createElement('li');
-        listItem.innerHTML = `Complaint #${index + 1}: ${complaint.complaint} (Status: ${complaint.status})
-        <button onclick="viewComplaintDetails(${index})">View Details</button>`;
-        complaintList.appendChild(listItem);
-    });
+            complaints.forEach((complaint, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    Complaint #${index + 1}: ${complaint.complaint} (Status: ${complaint.status})
+                    <button onclick="viewComplaintDetails(${index})">View Details</button>
+                `;
+                complaintList.appendChild(listItem);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load complaints.');
+        });
 }
 
+
 function viewComplaintDetails(index) {
-    const complaints = JSON.parse(localStorage.getItem('complaints')) || [];
-    const complaint = complaints[index];
-    alert(`Complaint Details:
-    Quarter Number: ${complaint.quarterNumber}
-    Name: ${complaint.name}
-    Phone: ${complaint.phone}
-    Email: ${complaint.email}
-    Complaint Type: ${complaint.complaintType}
-    Urgency: ${complaint.urgency}
-    Description: ${complaint.complaint}
-    Availability Date: ${complaint.availabilityDate}
-    Availability Time: ${complaint.availabilityTime}
-    Status: ${complaint.status}
-    Assigned Worker: ${complaint.worker || 'Not Assigned'}
-    Worker Details: ${getWorkerDetails(complaint.worker)}`);
+    fetch('/api/complaints', {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    })
+        .then(response => response.json())
+        .then(complaints => {
+            const complaint = complaints[index];
+            alert(`Complaint Details:
+            Quarter Number: ${complaint.quarterNumber}
+            Name: ${complaint.name}
+            Phone: ${complaint.phone}
+            Email: ${complaint.email}
+            Complaint Type: ${complaint.complaintType}
+            Urgency: ${complaint.urgency}
+            Description: ${complaint.complaint}
+            Availability Date: ${complaint.availabilityDate}
+            Availability Time: ${complaint.availabilityTime}
+            Status: ${complaint.status}
+            Assigned Worker: ${complaint.worker || 'Not Assigned'}
+            Worker Details: ${getWorkerDetails(complaint.worker)}`);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load complaint details.');
+        });
 }
 
 function getWorkerDetails(workerUsername) {
-    const worker = predefinedWorkers.find(w => w.username === workerUsername);
-    return worker ? `Name: ${worker.name}, Phone: ${worker.phone}, Email: ${worker.email}` : 'No worker assigned';
+    if (!workerUsername) return 'No worker assigned';
+    return fetch(`/api/workers/${workerUsername}`, {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    })
+        .then(response => response.json())
+        .then(worker => {
+            return worker ? `Name: ${worker.name}, Phone: ${worker.phone}, Email: ${worker.email}` : 'No worker assigned';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            return 'Failed to load worker details';
+        });
 }
 
-function adminLogin(event) {
-    event.preventDefault();
 
-    const username = document.getElementById('adminUsername').value;
-    const password = document.getElementById('adminPassword').value;
-
-    // Simple login check for demonstration (this should be more secure in a real application)
-    if (username === 'admin' && password === 'password') {
-        alert('Login successful');
-        showPage('adminDashboard');
-    } else {
-        alert('Invalid credentials');
-    }
-}
 
 function loadAdminComplaints() {
     const complaints = JSON.parse(localStorage.getItem('complaints')) || [];
@@ -376,21 +413,7 @@ function assignWorker(index, workerUsername) {
     }
 }
 
-function workerLogin(event) {
-    event.preventDefault();
 
-    const username = document.getElementById('workerUsername').value;
-    const password = document.getElementById('workerPassword').value;
-
-    // Simple login check for demonstration (this should be more secure in a real application)
-    if (username && password) {
-        localStorage.setItem('loggedInWorker', username);
-        alert('Login successful');
-        showPage('workerDashboard');
-    } else {
-        alert('Invalid credentials');
-    }
-}
 
 function loadWorkerComplaints() {
     const loggedInWorker = localStorage.getItem('loggedInWorker');
@@ -457,4 +480,83 @@ function workerDetails(event) {
     localStorage.setItem('predefinedWorkers', JSON.stringify(predefinedWorkers));
     alert('Worker details saved successfully');
     showPage('workerDashboard');
+}
+function registerUser(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+
+    const newUser = { email, password, role };
+
+    fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser)
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Registration successful!');
+        window.location.href = 'login.html';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to register.');
+    });
+}
+
+function loginUser(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+
+    const credentials = { email, password, role };
+
+    fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+    })
+    .then(response => response.json())
+    .then(data => {
+        localStorage.setItem('token', data.token);
+        alert('Login successful!');
+        window.location.href = 'index.html';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to login.');
+    });
+}
+
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        document.getElementById('submitComplaintSection').style.display = 'none';
+        document.getElementById('viewComplaintsSection').style.display = 'none';
+        return;
+    }
+
+    fetch('/api/check-auth', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.authenticated) {
+            document.getElementById('submitComplaintSection').style.display = 'block';
+            document.getElementById('viewComplaintsSection').style.display = 'block';
+        } else {
+            document.getElementById('submitComplaintSection').style.display = 'none';
+            document.getElementById('viewComplaintsSection').style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to check authentication.');
+    });
 }
