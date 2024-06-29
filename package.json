@@ -32,6 +32,7 @@
     "express-jwt": "^7.7.8",
     "http-server": "^14.1.1",
     "jsonwebtoken": "^9.0.2",
+    "path": "^0.12.7",
     "pouchdb": "^9.0.0",
     "pouchdb-find": "^9.0.0"
   }

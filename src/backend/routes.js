@@ -1,6 +1,7 @@
 import { Router } from 'express';
+import { post, allDocs, get, put, remove, findWorker } from './db.js';
+
 const router = Router();
-import { post, allDocs, get, put, remove } from './db.js';
 
 // Create Complaint
 router.post('/complaints', async (req, res) => {
@@ -48,15 +49,49 @@ router.delete('/complaints/:id', async (req, res) => {
     }
 });
 
+// Register Worker
+router.post('/register', async (req, res) => {
+    try {
+        const worker = req.body;
+        const response = await post(worker);
+        res.status(201).json(response);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const worker = await findWorker(username);
+
+        if (worker) {
+            console.log(`Worker found: ${JSON.stringify(worker)}`);
+            if (worker.password === password) {
+                console.log('Password match');
+                res.json({ message: 'Login successful', worker });
+            } else {
+                console.log('Password does not match');
+                res.status(401).json({ error: 'Invalid credentials' });
+            }
+        } else {
+            console.log('Worker not found');
+            res.status(401).json({ error: 'Invalid credentials' });
+        }
+    } catch (error) {
+        console.error('Error during login:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 // Get Worker Details
 router.get('/workers/:username', async (req, res) => {
     try {
         const { username } = req.params;
-        const worker = await workerDB.find({
-            selector: { username }
-        });
-        if (worker.docs.length > 0) {
-            res.json(worker.docs[0]);
+        const worker = await get(username);
+        if (worker) {
+            res.json(worker);
         } else {
             res.status(404).json({ error: 'Worker not found' });
         }

@@ -1,0 +1,66 @@
+### Create a new complaint
+POST http://localhost:3000/api/complaints
+Content-Type: application/json
+
+{
+  "quarterNumber": "123",
+  "name": "Jane Doe",
+  "phone": "9876543210",
+  "email": "jane@example.com",
+  "complaintType": "Electrical",
+  "urgency": "Regular",
+  "complaint": "There are exposed wires in the back of my house. ",
+  "availabilityDate": "2024-07-10",
+  "availabilityTime": "11 AM"
+}
+
+###
+
+### Get all complaints
+GET http://localhost:3000/api/complaints
+
+###
+
+### Update a complaint
+PUT http://localhost:3000/api/complaints/6e25b554-3b2f-479d-a171-690ffdf7bb25
+
+{
+  "status": "Resolved",
+  "urgency": "Emergency"
+}
+
+###
+
+### Delete a complaint
+DELETE http://localhost:3000/api/complaints/6e25b554-3b2f-479d-a171-690ffdf7bb25
+
+###
+
+### Get worker details
+GET http://localhost:3000/api/workers/sharma1
+
+###
+
+### Register a new worker
+POST http://localhost:3000/api/register
+Content-Type: application/json
+
+{
+  "username": "sharma1",
+  "name": "Worker One",
+  "phone": "9876543210",
+  "email": "jahnavi261@gmail.com",
+  "password": "password1",
+  "expertise": "Plumbing"
+}
+
+###
+
+### Worker login
+POST http://localhost:3000/api/login
+Content-Type: application/json
+
+{
+  "email": "jahnavi261@gmail.com",
+  "password": "password1"
+}
