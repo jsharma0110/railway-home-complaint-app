@@ -9,10 +9,11 @@ Content-Type: application/json
   "email": "jane@example.com",
   "complaintType": "Electrical",
   "urgency": "Regular",
-  "complaint": "There are exposed wires in the back of my house. ",
+  "complaint": "There are exposed wires in the bathroom.",
   "availabilityDate": "2024-07-10",
   "availabilityTime": "11 AM"
 }
+
 
 ###
 
@@ -22,8 +23,7 @@ GET http://localhost:3000/api/complaints
 ###
 
 ### Update a complaint
-PUT http://localhost:3000/api/complaints/9f452cda-9863-4b4c-b5e3-79ae97e0b357
-
+PUT http://localhost:3000/api/complaints/6298c0c1-bebe-43f5-9765-3d2599f5acab
 {
   "status": "Resolved",
   "urgency": "Regular"
@@ -32,7 +32,7 @@ PUT http://localhost:3000/api/complaints/9f452cda-9863-4b4c-b5e3-79ae97e0b357
 ###
 
 ### Delete a complaint
-DELETE http://localhost:3000/api/complaints/95eb892f-4bab-49c9-998c-0dfb3f62b967
+DELETE http://localhost:3000/api/complaints/6298c0c1-bebe-43f5-9765-3d2599f5acab
 
 ###
 

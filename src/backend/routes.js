@@ -1,7 +1,6 @@
 import { Router } from 'express';
-import { post, allDocs, get, put, remove, findWorker } from './db.js';
-
 const router = Router();
+import { post, allDocs, get, put, remove, userDB, workerDB } from './db.js';
 
 // Create Complaint
 router.post('/complaints', async (req, res) => {
@@ -13,6 +12,7 @@ router.post('/complaints', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
 
 // Read Complaints
 router.get('/complaints', async (req, res) => {
@@ -50,9 +50,10 @@ router.delete('/complaints/:id', async (req, res) => {
 });
 
 // Register Worker
-router.post('/register', async (req, res) => {
+router.post('/workers', async (req, res) => {
     try {
         const worker = req.body;
+        worker._id = `worker_${worker.username}`;
         const response = await post(worker);
         res.status(201).json(response);
     } catch (error) {
@@ -60,36 +61,30 @@ router.post('/register', async (req, res) => {
     }
 });
 
+
+// Worker Login
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const worker = await findWorker(username);
-
-        if (worker) {
-            console.log(`Worker found: ${JSON.stringify(worker)}`);
-            if (worker.password === password) {
-                console.log('Password match');
-                res.json({ message: 'Login successful', worker });
-            } else {
-                console.log('Password does not match');
-                res.status(401).json({ error: 'Invalid credentials' });
-            }
+        const worker = await workerDB.find({
+            selector: { username, password }
+        });
+        if (worker.docs.length > 0) {
+            res.json(worker.docs[0]);
         } else {
-            console.log('Worker not found');
-            res.status(401).json({ error: 'Invalid credentials' });
+            res.status(404).json({ error: 'Invalid credentials' });
         }
     } catch (error) {
-        console.error('Error during login:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
-
 
 // Get Worker Details
 router.get('/workers/:username', async (req, res) => {
     try {
         const { username } = req.params;
-        const worker = await get(username);
+        const workers = await allDocs({ include_docs: true, startkey: `worker_${username}`, endkey: `worker_${username}\ufff0` });
+        const worker = workers.rows.length ? workers.rows[0].doc : null;
         if (worker) {
             res.json(worker);
         } else {
@@ -99,5 +94,6 @@ router.get('/workers/:username', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
 
 export default router;
