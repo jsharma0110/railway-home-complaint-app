@@ -23,16 +23,19 @@ GET http://localhost:3000/api/complaints
 ###
 
 ### Update a complaint
-PUT http://localhost:3000/api/complaints/6298c0c1-bebe-43f5-9765-3d2599f5acab
+PUT http://localhost:3000/api/complaints/8fd4bd08-8f07-4c80-8b41-b1418898e53c
+Content-Type: application/json
+
 {
   "status": "Resolved",
   "urgency": "Regular"
 }
 
+
 ###
 
 ### Delete a complaint
-DELETE http://localhost:3000/api/complaints/6298c0c1-bebe-43f5-9765-3d2599f5acab
+DELETE http://localhost:3000/api/complaints/8fd4bd08-8f07-4c80-8b41-b1418898e53c
 
 ###
 
@@ -41,12 +44,12 @@ POST http://localhost:3000/api/register
 Content-Type: application/json
 
 {
-  "username": "sharma1",
-  "name": "Worker One",
-  "phone": "9876543210",
-  "email": "jahnavi261@gmail.com",
-  "password": "password1",
-  "expertise": "Plumbing"
+  "username": "hilton",
+  "name": "Paris Hilton",
+  "phone": "9123456780",
+  "email": "paris.hilton1@gmail.com",
+  "password": "password123",
+  "expertise": "Electrical"
 }
 
 ###
@@ -56,6 +59,6 @@ POST http://localhost:3000/api/login
 Content-Type: application/json
 
 {
-  "email": "jahnavi261@gmail.com",
-  "password": "password1"
+  "email": "paris.hilton1@gmail.com",
+  "password": "password123"
 }

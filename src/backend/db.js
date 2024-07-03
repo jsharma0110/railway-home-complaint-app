@@ -13,5 +13,5 @@ const allDocs = async (options) => await complaintDB.allDocs(options);
 const get = async (id) => await complaintDB.get(id);
 const put = async (doc) => await complaintDB.put(doc);
 const remove = async (doc) => await complaintDB.remove(doc);
-
-export { userDB, workerDB, adminDB, complaintDB, post, allDocs, get, put, remove };
+const postWorker = async (doc) => await workerDB.post(doc);
+export { userDB, workerDB, adminDB, complaintDB, post, allDocs, get, put, remove, postWorker };

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { post, allDocs, get, put, remove, userDB, workerDB } from './db.js';
+import { post, allDocs, get, put, remove, userDB, workerDB, postWorker } from './db.js';
 
 // Create Complaint
 router.post('/complaints', async (req, res) => {
@@ -50,11 +50,10 @@ router.delete('/complaints/:id', async (req, res) => {
 });
 
 // Register Worker
-router.post('/workers', async (req, res) => {
+router.post('/register', async (req, res) => {
     try {
         const worker = req.body;
-        worker._id = `worker_${worker.username}`;
-        const response = await post(worker);
+        const response = await postWorker(worker);
         res.status(201).json(response);
     } catch (error) {
         res.status(500).json({ error: error.message });
