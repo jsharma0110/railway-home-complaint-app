@@ -284,30 +284,26 @@ function loadComplaints() {
 }
 
 
-function viewComplaintDetails(index) {
-    fetch('/api/complaints')
-        .then(response => response.json())
-        .then(complaints => {
-            const complaint = complaints[index];
-            alert(`Complaint Details:
-            Quarter Number: ${complaint.quarterNumber}
-            Name: ${complaint.name}
-            Phone: ${complaint.phone}
-            Email: ${complaint.email}
-            Complaint Type: ${complaint.complaintType}
-            Urgency: ${complaint.urgency}
-            Description: ${complaint.complaint}
-            Availability Date: ${complaint.availabilityDate}
-            Availability Time: ${complaint.availabilityTime}
-            Status: ${complaint.status}
-            Assigned Worker: ${complaint.worker || 'Not Assigned'}
-            Worker Details: ${getWorkerDetails(complaint.worker)}`);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to load complaint details.');
-        });
+async function viewComplaintDetails(index) {
+    const complaints = await fetch('/api/complaints').then(response => response.json());
+    const complaint = complaints[index];
+    const workerDetails = await getWorkerDetails(complaint.worker);
+
+    alert(`Complaint Details:
+    Quarter Number: ${complaint.quarterNumber}
+    Name: ${complaint.name}
+    Phone: ${complaint.phone}
+    Email: ${complaint.email}
+    Complaint Type: ${complaint.complaintType}
+    Urgency: ${complaint.urgency}
+    Description: ${complaint.complaint}
+    Availability Date: ${complaint.availabilityDate}
+    Availability Time: ${complaint.availabilityTime}
+    Status: ${complaint.status}
+    Assigned Worker: ${complaint.worker || 'Not Assigned'}
+    Worker Details: ${workerDetails}`);
 }
+
 
 function getWorkerDetails(workerUsername) {
     return fetch(`/api/workers/${workerUsername}`)
@@ -320,6 +316,7 @@ function getWorkerDetails(workerUsername) {
             return 'Failed to load worker details';
         });
 }
+
 
 function adminLogin(event) {
     event.preventDefault();
@@ -570,20 +567,15 @@ function workerDetails(event) {
     const email = document.getElementById('workerEmail').value;
     const specialty = document.getElementById('workerSpecialty').value;
 
-    const newWorker = { username, name, phone, email, expertise: specialty };
+    // Update or add worker to predefinedWorkers list
+    const workerIndex = predefinedWorkers.findIndex(worker => worker.username === username);
+    if (workerIndex !== -1) {
+        predefinedWorkers[workerIndex] = { username, name, phone, email, expertise: specialty };
+    } else {
+        predefinedWorkers.push({ username, name, phone, email, expertise: specialty });
+    }
 
-    fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newWorker)
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert('Worker details saved successfully');
-        showPage('workerDashboard');
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to save worker details.');
-    });
+    localStorage.setItem('predefinedWorkers', JSON.stringify(predefinedWorkers));
+    alert('Worker details saved successfully');
+    showPage('workerDashboard');
 }
